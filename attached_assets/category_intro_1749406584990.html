@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-folder-open me-2"></i>
+                    {{ category.name }}
+                </h2>
+            </div>
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-info-circle fa-4x text-secondary mb-3"></i>
+                </div>
+                
+                <div class="alert alert-info border-0" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Category Overview
+                    </h5>
+                    <p class="mb-0">{{ category.description }}</p>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light border-0">
+                            <div class="card-body text-center">
+                                <i class="fas fa-question-circle fa-2x text-primary mb-2"></i>
+                                <h6>What to Expect</h6>
+                                <p class="text-muted small mb-0">You'll answer targeted questions about your organization's practices in this area</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light border-0">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-upload fa-2x text-primary mb-2"></i>
+                                <h6>Supporting Documents</h6>
+                                <p class="text-muted small mb-0">Some questions may require you to upload supporting documents</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-5">
+                    <a href="{{ url_for('start_category', category_name=category.name) }}" class="btn btn-primary btn-lg px-5">
+                        <i class="fas fa-play me-2"></i>
+                        Begin {{ category.name }} Questions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

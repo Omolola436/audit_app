@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Progress Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 bg-light">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="text-muted">Question {{ current_position }} of {{ total_questions }}</small>
+                    <small class="text-muted">{{ ((current_position / total_questions) * 100) | round(1) }}% Complete</small>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                         style="width: {{ (current_position / total_questions) * 100 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-secondary text-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-tag me-2"></i>
+                    {{ question.category }}
+                </h5>
+            </div>
+            <div class="card-body p-5">
+                <form method="POST" action="{{ url_for('submit_answer') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="question_id" value="{{ question.id }}">
+                    
+                    <!-- Question Text -->
+                    <div class="mb-4">
+                        <h4 class="text-primary mb-3">
+                            <i class="fas fa-question-circle me-2"></i>
+                            Question {{ current_position }}
+                        </h4>
+                        <p class="lead">{{ question.question_text }}</p>
+                    </div>
+                    
+                    <!-- Answer Options -->
+                    {% if question.question_type == 'multiple_choice' %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Please select your answer:</label>
+                            {% set options = question.options | from_json %}
+                            {% for option in options %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="answer" 
+                                           id="option_{{ loop.index }}" value="{{ option }}" 
+                                           {% if existing_response and existing_response.answer == option %}checked{% endif %} required>
+                                    <label class="form-check-label" for="option_{{ loop.index }}">
+                                        {{ option }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Comment Field -->
+                    <div class="mb-4">
+                        <label for="comment" class="form-label fw-bold">
+                            <i class="fas fa-comment me-1"></i>
+                            Additional Comments (Optional)
+                        </label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" 
+                                  placeholder="Please provide any additional context or explanation...">{% if existing_response %}{{ existing_response.comment }}{% endif %}</textarea>
+                    </div>
+                    
+                    <!-- File Upload -->
+                    {% if 'upload evidence if available' in question.question_text or 'upload' in question.question_text.lower() %}
+                        <div class="mb-4">
+                            <label for="file" class="form-label fw-bold">
+                                <i class="fas fa-file-upload me-1"></i>
+                                Supporting Document (Optional)
+                            </label>
+                            <input type="file" class="form-control" id="file" name="file" 
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                            <div class="form-text">
+                                Accepted formats: PDF, Word Documents, Images (Max size: 16MB)
+                            </div>
+                            {% if existing_response and existing_response.file_path %}
+                                <div class="alert alert-success mt-2" role="alert">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    File previously uploaded: {{ existing_response.file_path.split('/')[-1] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Navigation Buttons -->
+                    <div class="row mt-5">
+                        <div class="col-md-6 mb-3">
+                            {% if prev_question %}
+                                <a href="{{ url_for('question', question_id=prev_question.id) }}" 
+                                   class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-chevron-left me-2"></i>
+                                    Previous Question
+                                </a>
+                            {% else %}
+                                <div class="text-muted text-center">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    This is the first question
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary w-100">
+                                {% if next_question %}
+                                    Next Question
+                                    <i class="fas fa-chevron-right ms-2"></i>
+                                {% else %}
+                                    Complete Audit
+                                    <i class="fas fa-check ms-2"></i>
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// File upload is now optional, no validation needed
+</script>
+{% endblock %}
