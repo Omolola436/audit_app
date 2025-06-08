@@ -211,13 +211,27 @@ def admin_dashboard():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
     
-    # Get all submissions with user information
+    # Get all submissions with user information and their uploaded files
+    submissions_data = []
     submissions = db.session.query(Submission, User).join(User).order_by(Submission.submitted_at.desc()).all()
+    
+    for submission, user in submissions:
+        # Get all uploaded files for this user
+        user_files = db.session.query(Response).filter(
+            Response.user_id == user.id,
+            Response.file_path.isnot(None)
+        ).all()
+        
+        submissions_data.append({
+            'submission': submission,
+            'user': user,
+            'uploaded_files': user_files
+        })
     
     # Calculate unique companies count
     unique_companies = len(set([user.company_name for submission, user in submissions]))
     
-    return render_template('admin_dashboard.html', submissions=submissions, unique_companies=unique_companies)
+    return render_template('admin_dashboard.html', submissions_data=submissions_data, unique_companies=unique_companies)
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -242,6 +256,21 @@ def download_file(submission_id, file_type):
             return send_file(submission.word_report_path,
                            as_attachment=True,
                            download_name=f"{user.company_name}_audit_report.docx")
+    
+    flash('File not found', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/download/user-file/<int:response_id>')
+def download_user_file(response_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    
+    response = Response.query.get_or_404(response_id)
+    
+    if response.file_path and os.path.exists(response.file_path):
+        # Get original filename from path
+        filename = os.path.basename(response.file_path)
+        return send_file(response.file_path, as_attachment=True, download_name=filename)
     
     flash('File not found', 'error')
     return redirect(url_for('admin_dashboard'))

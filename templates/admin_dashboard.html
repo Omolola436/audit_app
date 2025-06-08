@@ -63,33 +63,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for submission, user in submissions %}
+                    {% for data in submissions_data %}
                     <tr>
                         <td>
-                            <strong class="text-dark">{{ user.company_name }}</strong>
+                            <strong class="text-dark">{{ data.user.company_name }}</strong>
                         </td>
-                        <td class="text-dark">{{ user.email }}</td>
+                        <td class="text-dark">{{ data.user.email }}</td>
                         <td>
                             <small class="text-muted">
-                                {{ submission.submitted_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                {{ data.submission.submitted_at.strftime('%B %d, %Y at %I:%M %p') }}
                             </small>
                         </td>
                         <td>
                             <span class="badge bg-success">
                                 <i class="fas fa-check me-1"></i>
-                                {{ submission.status.title() }}
+                                {{ data.submission.status.title() }}
                             </span>
                         </td>
                         <td>
                             <div class="btn-group" role="group">
-                                {% if submission.excel_path %}
-                                <a href="{{ url_for('download_file', submission_id=submission.id, file_type='excel') }}" 
+                                {% if data.submission.excel_path %}
+                                <a href="{{ url_for('download_file', submission_id=data.submission.id, file_type='excel') }}" 
                                    class="btn btn-sm audit-btn-success" title="Download Excel Report">
                                     <i class="fas fa-file-excel"></i>
                                 </a>
                                 {% endif %}
-                                {% if submission.word_report_path %}
-                                <a href="{{ url_for('download_file', submission_id=submission.id, file_type='word') }}" 
+                                {% if data.submission.word_report_path %}
+                                <a href="{{ url_for('download_file', submission_id=data.submission.id, file_type='word') }}" 
                                    class="btn btn-sm audit-btn-primary" title="Download Word Report">
                                     <i class="fas fa-file-word"></i>
                                 </a>
@@ -97,6 +97,30 @@
                             </div>
                         </td>
                     </tr>
+                    {% if data.uploaded_files %}
+                    <tr class="table-light">
+                        <td colspan="5">
+                            <div class="ms-3">
+                                <small class="text-muted fw-bold">
+                                    <i class="fas fa-paperclip me-1"></i>
+                                    User Uploaded Files:
+                                </small>
+                                <div class="mt-1">
+                                    {% for file_response in data.uploaded_files %}
+                                    <div class="d-inline-block me-2 mb-1">
+                                        <a href="{{ url_for('download_user_file', response_id=file_response.id) }}" 
+                                           class="btn btn-sm btn-outline-secondary" 
+                                           title="Download {{ file_response.file_path.split('/')[-1] if file_response.file_path else 'File' }}">
+                                            <i class="fas fa-download me-1"></i>
+                                            <small>{{ file_response.file_path.split('/')[-1] if file_response.file_path else 'File' }}</small>
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
