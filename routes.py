@@ -214,7 +214,10 @@ def admin_dashboard():
     # Get all submissions with user information
     submissions = db.session.query(Submission, User).join(User).order_by(Submission.submitted_at.desc()).all()
     
-    return render_template('admin_dashboard.html', submissions=submissions)
+    # Calculate unique companies count
+    unique_companies = len(set([user.company_name for submission, user in submissions]))
+    
+    return render_template('admin_dashboard.html', submissions=submissions, unique_companies=unique_companies)
 
 @app.route('/admin/logout')
 def admin_logout():
