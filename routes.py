@@ -184,7 +184,10 @@ def complete_audit():
         logging.error(f"Error generating reports for user {user.email}: {str(e)}")
         flash('There was an error generating your reports. Please contact support.', 'error')
     
-    return render_template('thank_you.html', user=user)
+    return render_template('thank_you.html', user=user, 
+                         EMAILJS_PUBLIC_KEY=os.environ.get('EMAILJS_PUBLIC_KEY'),
+                         EMAILJS_SERVICE_ID=os.environ.get('EMAILJS_SERVICE_ID'),
+                         EMAILJS_TEMPLATE_ID=os.environ.get('EMAILJS_TEMPLATE_ID'))
 
 @app.route('/admin')
 def admin_login():
