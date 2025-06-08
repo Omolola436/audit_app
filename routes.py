@@ -248,14 +248,18 @@ def download_file(submission_id, file_type):
     
     if file_type == 'excel' and submission.excel_path:
         if os.path.exists(submission.excel_path):
+            # Use company name with safe characters for filename
+            safe_company_name = user.company_name.replace(' ', '_').replace('/', '_').replace('\\', '_')
             return send_file(submission.excel_path, 
                            as_attachment=True,
-                           download_name=f"{user.company_name}_audit_responses.xlsx")
+                           download_name=f"{safe_company_name}_audit_responses.xlsx")
     elif file_type == 'word' and submission.word_report_path:
         if os.path.exists(submission.word_report_path):
+            # Use company name with safe characters for filename
+            safe_company_name = user.company_name.replace(' ', '_').replace('/', '_').replace('\\', '_')
             return send_file(submission.word_report_path,
                            as_attachment=True,
-                           download_name=f"{user.company_name}_audit_report.docx")
+                           download_name=f"{safe_company_name}_audit_report.docx")
     
     flash('File not found', 'error')
     return redirect(url_for('admin_dashboard'))
