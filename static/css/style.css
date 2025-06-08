@@ -1,0 +1,279 @@
+/* 3Consulting Audit Application Styles */
+
+/* Color Variables */
+:root {
+    --primary-orange: #FF8C00;
+    --light-orange: #FFD700; 
+    --beige: #F5DEB3;
+    --dark-beige: #DEB887;
+    --darker-beige: #D2B48C;
+    --cream: #FFF8DC;
+    --dark-orange: #FF6347;
+    --gradient-primary: linear-gradient(135deg, #FF8C00, #FF6347);
+    --gradient-secondary: linear-gradient(135deg, #DEB887, #D2B48C);
+    --gradient-light: linear-gradient(to bottom, #FFF8DC, #F5DEB3);
+}
+
+/* Body and General */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to bottom right, #FFF8DC, #F5DEB3);
+    min-height: 100vh;
+}
+
+/* Custom Card Styling */
+.audit-card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(255, 140, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.audit-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(255, 140, 0, 0.3);
+}
+
+/* Button Styles */
+.audit-btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.audit-btn-primary:hover {
+    background: linear-gradient(135deg, #FF6347, #FF4500);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 140, 0, 0.4);
+}
+
+.audit-btn-secondary {
+    background: var(--gradient-secondary);
+    border: none;
+    color: #2C3E50;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.audit-btn-secondary:hover {
+    background: linear-gradient(135deg, #D2B48C, #CD853F);
+    color: #2C3E50;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(222, 184, 135, 0.4);
+}
+
+.audit-btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.audit-btn-success:hover {
+    background: linear-gradient(135deg, #20c997, #17a2b8);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Form Input Styles */
+.audit-input {
+    border: 2px solid #DEB887;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 16px;
+    background-color: #FFF8DC;
+    transition: all 0.3s ease;
+}
+
+.audit-input:focus {
+    border-color: #FF8C00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.25);
+    background-color: white;
+}
+
+.audit-textarea {
+    border: 2px solid #DEB887;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 16px;
+    background-color: #FFF8DC;
+    resize: vertical;
+    min-height: 100px;
+    transition: all 0.3s ease;
+}
+
+.audit-textarea:focus {
+    border-color: #FF8C00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.25);
+    background-color: white;
+}
+
+.audit-file-input {
+    border: 2px solid #DEB887;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background-color: #FFF8DC;
+    transition: all 0.3s ease;
+}
+
+.audit-file-input:focus {
+    border-color: #FF8C00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.25);
+}
+
+/* Radio Button Styling */
+.audit-radio {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    accent-color: #FF8C00;
+}
+
+.form-check:hover {
+    background-color: #D2B48C !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Progress Bar */
+.progress {
+    background-color: #DEB887;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Alert Customization */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Table Styling */
+.table {
+    background-color: transparent;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 140, 0, 0.1);
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .audit-card {
+        margin: 10px;
+    }
+    
+    .card-body {
+        padding: 2rem !important;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+    
+    .audit-btn-primary,
+    .audit-btn-secondary {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Input Group Text */
+.input-group-text {
+    border: 2px solid #DEB887;
+    background-color: #FF8C00;
+    color: white;
+    font-weight: bold;
+}
+
+/* Category Introduction Styling */
+.category-intro {
+    background: var(--gradient-light);
+    border-left: 5px solid var(--primary-orange);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+/* Question Card Special Styling */
+.question-card {
+    background: var(--gradient-light);
+    border: 2px solid var(--dark-beige);
+    border-radius: 15px;
+}
+
+/* Admin Panel Specific Styles */
+.admin-card {
+    background: linear-gradient(135deg, #2C3E50, #34495E);
+}
+
+/* Success States */
+.success-icon {
+    color: #28a745;
+    filter: drop-shadow(2px 2px 4px rgba(40, 167, 69, 0.3));
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--beige);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-orange);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-orange);
+}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0 audit-card">
+            <div class="card-body text-center py-5" style="background: linear-gradient(to bottom, #FFF8DC, #F5DEB3);">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle fa-5x text-success"></i>
+                </div>
+                
+                <h1 class="mb-4" style="color: #FF8C00;">Thank You!</h1>
+                
+                <div class="alert border-0 mb-4" style="background-color: #98FB98;" role="alert">
+                    <h4 class="alert-heading text-success">
+                        <i class="fas fa-trophy me-2"></i>
+                        Audit Submission Successful
+                    </h4>
+                    <p class="mb-0 text-dark">
+                        Your data privacy audit has been successfully submitted and processed.
+                    </p>
+                </div>
+                
+                <div class="row mt-5">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 h-100" style="background-color: #DEB887;">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-alt fa-3x mb-3" style="color: #FF8C00;"></i>
+                                <h5 class="text-dark">Report Generated</h5>
+                                <p class="text-muted mb-0">A comprehensive audit report has been generated for {{ user.company_name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 h-100" style="background-color: #DEB887;">
+                            <div class="card-body text-center">
+                                <i class="fas fa-envelope fa-3x mb-3" style="color: #FF8C00;"></i>
+                                <h5 class="text-dark">Notification Sent</h5>
+                                <p class="text-muted mb-0">Our compliance team has been notified of your submission</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card text-white mt-4" style="background: linear-gradient(135deg, #FF8C00, #FF6347);">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-info-circle me-2"></i>
+                            What Happens Next?
+                        </h5>
+                        <ul class="list-unstyled mb-0 text-start">
+                            <li class="mb-2">
+                                <i class="fas fa-check me-2"></i>
+                                Your responses have been analyzed and compiled into a detailed report
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check me-2"></i>
+                                Charts and recommendations have been generated based on your answers
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check me-2"></i>
+                                Our team will review your submission and may contact you for follow-up
+                            </li>
+                            <li>
+                                <i class="fas fa-check me-2"></i>
+                                You'll receive further communication regarding your audit results
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-5">
+                    <a href="{{ url_for('index') }}" class="btn btn-lg audit-btn-primary">
+                        <i class="fas fa-home me-2"></i>
+                        Return to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EmailJS Integration -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize EmailJS
+    emailjs.init("HKF4KVkFQXFuTYpwZ"); // Public key - replace with your actual key
+    
+    // Get admin dashboard URL
+    const adminUrl = window.location.origin + '/admin/dashboard';
+    
+    // Send notification email to admin
+    const templateParams = {
+        to_email: 'odada@3consult-ng.com',
+        from_name: '3Consulting Audit System',
+        subject: 'New Audit Submission from {{ user.company_name }}',
+        company_name: '{{ user.company_name }}',
+        user_email: '{{ user.email }}',
+        submission_date: new Date().toLocaleString(),
+        admin_link: adminUrl,
+        message: `A new data privacy audit has been submitted by {{ user.company_name }} ({{ user.email }}). 
+
+Company: {{ user.company_name }}
+Email: {{ user.email }}
+Submission Date: ${new Date().toLocaleString()}
+
+Please access the admin dashboard to review the comprehensive report and download the generated documents:
+${adminUrl}
+
+Login credentials:
+Username: admin
+Password: password123`,
+        reply_to: '{{ user.email }}'
+    };
+    
+    // Send email using EmailJS
+    emailjs.send('service_3consulting', 'template_audit_notification', templateParams)
+        .then(function(response) {
+            console.log('Admin notification sent successfully!', response.status, response.text);
+            // Show success message to user
+            const successMsg = document.createElement('div');
+            successMsg.className = 'alert alert-success mt-3 border-0';
+            successMsg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Admin has been notified of your submission.';
+            document.querySelector('.card-body').appendChild(successMsg);
+        }, function(error) {
+            console.log('Failed to send admin notification:', error);
+            // Show info message that report is still generated
+            const infoMsg = document.createElement('div');
+            infoMsg.className = 'alert alert-info mt-3 border-0';
+            infoMsg.innerHTML = '<i class="fas fa-info-circle me-2"></i>Your audit report has been generated successfully.';
+            document.querySelector('.card-body').appendChild(infoMsg);
+        });
+});
+</script>
+{% endblock %}
