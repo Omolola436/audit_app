@@ -144,12 +144,13 @@ def generate_word_report(user_id):
     # Executive Summary
     doc.add_heading('EXECUTIVE SUMMARY', level=1)
     exec_summary = doc.add_paragraph()
-    exec_summary.add_run('3CONSULTING LIMITED').bold = True
-    exec_summary.add_run(', a licensed Data Protection Compliance Organization (DPCO), offers a comprehensive array of services encompassing various privacy disciplines. These include compliance assessments, training, program design, policy development, auditing, consulting, and other services aimed at ensuring adherence to the Nigeria Data Protection Act (NDPA) and any relevant foreign data protection laws or regulations applicable in Nigeria, as stipulated under Article 33 of the NDPA.')
+    exec_run1 = exec_summary.add_run('3CONSULTING LIMITED')
+    exec_run1.bold = True
+    exec_run2 = exec_summary.add_run(', a licensed Data Protection Compliance Organization (DPCO), offers a comprehensive array of services encompassing various privacy disciplines. These include compliance assessments, training, program design, policy development, auditing, consulting, and other services aimed at ensuring adherence to the Nigeria Data Protection Act (NDPA) and any relevant foreign data protection laws or regulations applicable in Nigeria, as stipulated under Article 33 of the NDPA.')
     
     doc.add_paragraph()
     summary_para = doc.add_paragraph()
-    summary_para.add_run(f'This audit aimed to verify the adequacy of {user.company_name.upper()}\'s technical and organizational measures in guaranteeing compliance with the Nigeria Data Protection Act (NDPA). Additionally, it aimed to evaluate the {user.company_name.upper()} monitoring mechanisms for assessing the efficacy of compliance with established policies and procedures.')
+    summary_run = summary_para.add_run(f'This audit aimed to verify the adequacy of {user.company_name.upper()}\'s technical and organizational measures in guaranteeing compliance with the Nigeria Data Protection Act (NDPA). Additionally, it aimed to evaluate the {user.company_name.upper()} monitoring mechanisms for assessing the efficacy of compliance with established policies and procedures.')
     
     # Scope table
     doc.add_paragraph()
@@ -324,8 +325,10 @@ def generate_word_report(user_id):
     doc.add_paragraph()
     doc.add_heading('DISCLAIMER', level=2)
     disclaimer_para = doc.add_paragraph()
-    disclaimer_para.add_run('This audit report is based on the information provided during the assessment period. 3Consulting Limited makes no representations or warranties regarding the completeness or accuracy of the information provided. This report is intended for the exclusive use of ').add_run(user.company_name).bold = True
-    disclaimer_para.add_run(' and should not be distributed to third parties without prior written consent from 3Consulting Limited.')
+    disclaimer_run1 = disclaimer_para.add_run('This audit report is based on the information provided during the assessment period. 3Consulting Limited makes no representations or warranties regarding the completeness or accuracy of the information provided. This report is intended for the exclusive use of ')
+    disclaimer_run2 = disclaimer_para.add_run(user.company_name)
+    disclaimer_run2.bold = True
+    disclaimer_run3 = disclaimer_para.add_run(' and should not be distributed to third parties without prior written consent from 3Consulting Limited.')
     
     # Save document
     filename = f"{user.company_name.replace(' ', '_')}_audit_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"

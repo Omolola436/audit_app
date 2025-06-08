@@ -146,7 +146,11 @@ def submit_answer():
     next_question = Question.query.filter(Question.order_num > question.order_num).order_by(Question.order_num).first()
     
     if next_question:
-        return redirect(url_for('question', question_id=next_question.id))
+        # Check if we're moving to a new category
+        if next_question.category != question.category:
+            return redirect(url_for('category_intro', category_name=next_question.category))
+        else:
+            return redirect(url_for('question', question_id=next_question.id))
     else:
         # All questions completed, generate reports and redirect to thank you page
         return redirect(url_for('complete_audit'))
