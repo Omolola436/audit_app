@@ -215,6 +215,9 @@ def admin_dashboard():
     submissions_data = []
     submissions = db.session.query(Submission, User).join(User).order_by(Submission.submitted_at.desc()).all()
     
+    # Debug: Log submission count
+    logging.info(f"Found {len(submissions)} submissions in database")
+    
     for submission, user in submissions:
         # Get all uploaded files for this user
         user_files = db.session.query(Response).filter(
@@ -222,16 +225,22 @@ def admin_dashboard():
             Response.file_path.isnot(None)
         ).all()
         
+        logging.info(f"User {user.email} has {len(user_files)} uploaded files")
+        
         submissions_data.append({
             'submission': submission,
             'user': user,
             'uploaded_files': user_files
         })
     
-    # Calculate unique companies count
-    unique_companies = len(set([user.company_name for submission, user in submissions]))
+    # Calculate stats
+    total_submissions = len(submissions_data)
+    unique_companies = len(set([user.company_name for submission, user in submissions])) if submissions else 0
     
-    return render_template('admin_dashboard.html', submissions_data=submissions_data, unique_companies=unique_companies)
+    return render_template('admin_dashboard.html', 
+                         submissions_data=submissions_data, 
+                         total_submissions=total_submissions,
+                         unique_companies=unique_companies)
 
 @app.route('/admin/logout')
 def admin_logout():

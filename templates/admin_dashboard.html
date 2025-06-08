@@ -17,7 +17,7 @@
         <div class="card text-white" style="background: linear-gradient(135deg, #FF8C00, #FF6347);">
             <div class="card-body text-center">
                 <i class="fas fa-file-alt fa-3x mb-2"></i>
-                <h3>{{ submissions|length }}</h3>
+                <h3>{{ total_submissions }}</h3>
                 <p class="mb-0">Total Submissions</p>
             </div>
         </div>
@@ -26,7 +26,7 @@
         <div class="card text-white" style="background: linear-gradient(135deg, #28a745, #20c997);">
             <div class="card-body text-center">
                 <i class="fas fa-check-circle fa-3x mb-2"></i>
-                <h3>{{ submissions|length }}</h3>
+                <h3>{{ total_submissions }}</h3>
                 <p class="mb-0">Completed Audits</p>
             </div>
         </div>
@@ -42,7 +42,7 @@
     </div>
 </div>
 
-{% if submissions %}
+{% if submissions_data %}
 <div class="card shadow audit-card">
     <div class="card-header text-white" style="background: linear-gradient(135deg, #FF8C00, #FF6347);">
         <h4 class="mb-0">
