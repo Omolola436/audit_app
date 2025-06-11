@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 from app import app, db
 from models import User, Question, Response, Submission, Category
 from report_generator import generate_excel_report, generate_word_report
+from audit_logger import log_login_success, log_login_failure, log_logout, log_error, log_admin_access, get_audit_logs
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 
@@ -23,17 +24,23 @@ def login():
         email = request.form['email']
         company_name = request.form['company_name']
         
-        # Check if user exists, if not create new user
-        user = User.query.filter_by(email=email, company_name=company_name).first()
-        if not user:
-            user = User(email=email, company_name=company_name)
-            db.session.add(user)
-            db.session.commit()
-        
-        # Store user info in session
-        session['user_id'] = user.id
-        session['email'] = user.email
-        session['company_name'] = user.company_name
+        try:
+            # Check if user exists, if not create new user
+            user = User.query.filter_by(email=email, company_name=company_name).first()
+            if not user:
+                user = User(email=email, company_name=company_name)
+                db.session.add(user)
+                db.session.commit()
+            
+            # Store user info in session
+            session['user_id'] = user.id
+            session['email'] = user.email
+            session['company_name'] = user.company_name
+            log_login_success(email)
+        except Exception as e:
+            log_error(e, email, "User login process")
+            flash('An error occurred during login. Please try again.', 'error')
+            return render_template('login.html')
         
         # Get first category
         first_category = Category.query.order_by(Category.order_num).first()
@@ -199,10 +206,12 @@ def admin_authenticate():
     password = request.form['password']
     
     # Simple admin authentication
-    if username == 'admin' and password == 'password123':
+    if username == 'admin' and password == 'admin123':
         session['admin_logged_in'] = True
+        log_admin_access(username, "Admin login successful")
         return redirect(url_for('admin_dashboard'))
     else:
+        log_login_failure(username, "Invalid admin credentials")
         flash('Invalid credentials', 'error')
         return redirect(url_for('admin_login'))
 
@@ -237,10 +246,16 @@ def admin_dashboard():
     total_submissions = len(submissions_data)
     unique_companies = len(set([user.company_name for submission, user in submissions])) if submissions else 0
     
+    # Get recent audit logs
+    audit_logs = get_audit_logs(50)
+    
+    log_admin_access("admin", "Accessed admin dashboard")
+    
     return render_template('admin_dashboard.html', 
                          submissions_data=submissions_data, 
                          total_submissions=total_submissions,
-                         unique_companies=unique_companies)
+                         unique_companies=unique_companies,
+                         audit_logs=audit_logs)
 
 @app.route('/admin/logout')
 def admin_logout():
