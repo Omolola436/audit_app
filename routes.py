@@ -7,7 +7,10 @@ from werkzeug.utils import secure_filename
 from app import app, db
 from models import User, Question, Response, Submission, Category
 from report_generator import generate_excel_report, generate_word_report
-from audit_logger import log_login_success, log_login_failure, log_logout, log_error, log_admin_access, get_audit_logs
+from audit_logger import (log_login_success, log_login_failure, log_logout, log_admin_access, 
+                        log_file_uploaded, log_questionnaire_submitted, log_audit_score_generated,
+                        log_unauthorized_access, log_form_submission_failed, log_internal_server_error,
+                        log_file_upload_error, get_audit_logs)
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 
@@ -38,7 +41,7 @@ def login():
             session['company_name'] = user.company_name
             log_login_success(email)
         except Exception as e:
-            log_error(e, email, "User login process")
+            log_internal_server_error(email, e, "User login process")
             flash('An error occurred during login. Please try again.', 'error')
             return render_template('login.html')
         
@@ -106,71 +109,99 @@ def question(question_id):
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():
     if 'user_id' not in session:
+        log_unauthorized_access(None, "/submit_answer", "POST")
         return redirect(url_for('login'))
     
-    user_id = session['user_id']
-    question_id = request.form['question_id']
-    answer = request.form.get('answer', '')
-    comment = request.form.get('comment', '')
-    
-    question = Question.query.get_or_404(question_id)
-    
-    # Handle file upload
-    file_path = None
-    if 'file' in request.files:
-        file = request.files['file']
-        if file and file.filename != '' and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            # Add timestamp to avoid conflicts
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
-            filename = timestamp + filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-    
-    # Check if response already exists
-    existing_response = Response.query.filter_by(user_id=user_id, question_id=question_id).first()
-    
-    if existing_response:
-        # Update existing response
-        existing_response.answer = answer
-        existing_response.comment = comment
-        if file_path:
-            existing_response.file_path = file_path
-    else:
-        # Create new response
-        response = Response(
-            user_id=user_id,
-            question_id=question_id,
-            answer=answer,
-            comment=comment,
-            file_path=file_path
-        )
-        db.session.add(response)
-    
-    db.session.commit()
-    
-    # Get next question
-    next_question = Question.query.filter(Question.order_num > question.order_num).order_by(Question.order_num).first()
-    
-    if next_question:
-        # Check if we're moving to a new category
-        if next_question.category != question.category:
-            return redirect(url_for('category_intro', category_name=next_question.category))
+    try:
+        user_id = session['user_id']
+        user_email = session.get('email')
+        question_id = request.form.get('question_id')
+        answer = request.form.get('answer', '')
+        comment = request.form.get('comment', '')
+        
+        if not question_id:
+            log_form_submission_failed(user_email, "Missing question ID")
+            flash('Invalid form submission', 'error')
+            return redirect(url_for('index'))
+        
+        question = Question.query.get_or_404(question_id)
+        
+        # Handle file upload
+        file_path = None
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and file.filename and file.filename != '':
+                if allowed_file(file.filename):
+                    try:
+                        filename = secure_filename(file.filename)
+                        # Add timestamp to avoid conflicts
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                        filename = timestamp + filename
+                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                        file.save(file_path)
+                        log_file_uploaded(user_email, filename)
+                    except Exception as e:
+                        log_file_upload_error(user_email, file.filename, str(e))
+                        flash('File upload failed. Please try again.', 'error')
+                        return redirect(url_for('question', question_id=question_id))
+                else:
+                    log_file_upload_error(user_email, file.filename, "File type not supported")
+                    flash('File type not supported', 'error')
+                    return redirect(url_for('question', question_id=question_id))
+        
+        # Check if response already exists
+        existing_response = Response.query.filter_by(user_id=user_id, question_id=question_id).first()
+        
+        if existing_response:
+            # Update existing response
+            existing_response.answer = answer
+            existing_response.comment = comment
+            if file_path:
+                existing_response.file_path = file_path
         else:
-            return redirect(url_for('question', question_id=next_question.id))
-    else:
-        # All questions completed, generate reports and redirect to thank you page
-        return redirect(url_for('complete_audit'))
+            # Create new response
+            response = Response(
+                user_id=user_id,
+                question_id=question_id,
+                answer=answer,
+                comment=comment,
+                file_path=file_path
+            )
+            db.session.add(response)
+        
+        db.session.commit()
+        
+        # Get next question
+        next_question = Question.query.filter(Question.order_num > question.order_num).order_by(Question.order_num).first()
+        
+        if next_question:
+            # Check if we're moving to a new category
+            if next_question.category != question.category:
+                return redirect(url_for('category_intro', category_name=next_question.category))
+            else:
+                return redirect(url_for('question', question_id=next_question.id))
+        else:
+            # All questions completed, generate reports and redirect to thank you page
+            return redirect(url_for('complete_audit'))
+            
+    except Exception as e:
+        log_internal_server_error(session.get('email'), e, "Answer submission")
+        flash('An error occurred while submitting your answer. Please try again.', 'error')
+        return redirect(url_for('question', question_id=question_id) if 'question_id' in locals() else url_for('index'))
 
 @app.route('/complete_audit')
 def complete_audit():
     if 'user_id' not in session:
+        log_unauthorized_access(None, "/complete_audit", "GET")
         return redirect(url_for('login'))
     
     user_id = session['user_id']
     user = User.query.get(user_id)
     
     try:
+        # Log questionnaire submission
+        log_questionnaire_submitted(user.email)
+        
         # Generate reports
         excel_path = generate_excel_report(user_id)
         word_path = generate_word_report(user_id)
@@ -185,10 +216,14 @@ def complete_audit():
         db.session.add(submission)
         db.session.commit()
         
+        # Log audit score generation
+        log_audit_score_generated(user.email, user.company_name)
+        
         logging.info(f"Reports generated for user {user.email}: Excel: {excel_path}, Word: {word_path}")
         
     except Exception as e:
-        logging.error(f"Error generating reports for user {user.email}: {str(e)}")
+        log_internal_server_error(user.email if user else None, e, "Report generation")
+        logging.error(f"Error generating reports for user {user.email if user else 'unknown'}: {str(e)}")
         flash('There was an error generating your reports. Please contact support.', 'error')
     
     return render_template('thank_you.html', user=user, 

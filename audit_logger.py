@@ -1,89 +1,132 @@
-import json
 import traceback
 from datetime import datetime
 from flask import request
-import os
 
-def get_client_info():
-    """Extract client information from request"""
+def get_client_ip():
+    """Extract client IP address from request"""
     try:
-        ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
-        user_agent = request.headers.get('User-Agent', 'unknown')
-        return ip_address, user_agent
+        # Check for forwarded IP first (proxy/load balancer)
+        forwarded_for = request.environ.get('HTTP_X_FORWARDED_FOR')
+        if forwarded_for:
+            # X-Forwarded-For can contain multiple IPs, get the first one
+            public_ip = forwarded_for.split(',')[0].strip()
+        else:
+            public_ip = request.environ.get('REMOTE_ADDR', 'unknown')
+        
+        # Get internal IP
+        internal_ip = request.environ.get('REMOTE_ADDR', 'unknown')
+        
+        # Combine both if different
+        if public_ip != internal_ip and forwarded_for:
+            return f"{public_ip}, {internal_ip}"
+        else:
+            return public_ip
     except:
-        return 'unknown', 'unknown'
+        return 'unknown'
 
 def log_audit_event(event_type, user=None, description="", error=None):
-    """Log audit events to audit_log.json"""
+    """Log audit events to database"""
     try:
-        ip_address, device_info = get_client_info()
+        from app import db
+        from models import AuditLog
         
-        entry = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "event_type": event_type,
-            "user_id": user or "anonymous",
-            "ip_address": ip_address,
-            "device_info": device_info,
-            "action_description": description
-        }
+        ip_address = get_client_ip()
         
+        # If error occurred, include error details in description
         if error:
-            entry["exception_type"] = type(error).__name__
-            entry["stack_trace"] = traceback.format_exc()
+            error_details = f" - Error: {type(error).__name__}: {str(error)}"
+            description = description + error_details
         
-        # Ensure logs directory exists
-        log_dir = os.path.join(os.getcwd(), 'logs')
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
+        audit_log = AuditLog(
+            event_type=event_type,
+            user=user or "anonymous",
+            ip_address=ip_address,
+            description=description
+        )
         
-        log_file_path = os.path.join(log_dir, 'audit_log.json')
-        
-        with open(log_file_path, 'a', encoding='utf-8') as log_file:
-            log_file.write(json.dumps(entry) + '\n')
+        db.session.add(audit_log)
+        db.session.commit()
             
     except Exception as e:
         # Fallback logging to prevent audit logging failures from breaking the app
         print(f"Audit logging failed: {str(e)}")
 
+# Success Events
 def log_login_success(user_email):
     """Log successful login"""
-    log_audit_event("login_success", user_email, "User successfully logged in")
+    log_audit_event("Login Success", user_email, "User successfully logged in")
 
-def log_login_failure(user_email=None, reason="Invalid credentials"):
-    """Log failed login attempt"""
-    log_audit_event("login_failure", user_email, f"Login failed: {reason}")
+def log_admin_access(user_email, action="Admin login successful"):
+    """Log admin panel access and actions"""
+    log_audit_event("Admin Access", user_email, action)
 
 def log_logout(user_email):
     """Log user logout"""
-    log_audit_event("logout", user_email, "User logged out")
+    log_audit_event("Logout", user_email, "User logged out")
 
-def log_error(error, user=None, context=""):
-    """Log application errors"""
-    description = f"Application error: {context}" if context else "Unhandled application error"
-    log_audit_event("error", user, description, error)
+def log_file_uploaded(user_email, filename):
+    """Log file upload"""
+    log_audit_event("File Uploaded", user_email, f"File uploaded: {filename}")
 
-def log_admin_access(user_email, action):
-    """Log admin panel access and actions"""
-    log_audit_event("admin_access", user_email, f"Admin action: {action}")
+def log_questionnaire_submitted(user_email):
+    """Log questionnaire submission"""
+    log_audit_event("Questionnaire Submitted", user_email, "User completed and submitted questionnaire")
+
+def log_audit_score_generated(user_email, company_name):
+    """Log audit score generation"""
+    log_audit_event("Audit Score Generated", user_email, f"Audit reports generated for {company_name}")
+
+# Error Events
+def log_login_failure(user_email=None, reason="Invalid credentials"):
+    """Log failed login attempt"""
+    log_audit_event("Login Failed", user_email, f"Login failed: {reason}")
+
+def log_unauthorized_access(user_email=None, endpoint="", method=""):
+    """Log unauthorized access attempt"""
+    description = f"Unauthorized access attempt to {endpoint}"
+    if method:
+        description += f" using {method}"
+    log_audit_event("Unauthorized Access Attempt", user_email, description)
+
+def log_form_submission_failed(user_email=None, reason="Validation error"):
+    """Log form submission failure"""
+    log_audit_event("Form Submission Failed", user_email, f"Form submission failed: {reason}")
+
+def log_internal_server_error(user_email=None, error=None, context=""):
+    """Log internal server errors"""
+    description = f"Internal server error: {context}" if context else "Internal server error occurred"
+    log_audit_event("Internal Server Error", user_email, description, error)
+
+def log_file_upload_error(user_email=None, filename="", reason=""):
+    """Log file upload errors"""
+    description = f"File upload failed"
+    if filename:
+        description += f" for {filename}"
+    if reason:
+        description += f": {reason}"
+    log_audit_event("File Upload Error", user_email, description)
 
 def get_audit_logs(limit=100):
-    """Retrieve audit logs for admin dashboard"""
+    """Retrieve audit logs from database for admin dashboard"""
     try:
-        log_file_path = os.path.join(os.getcwd(), 'logs', 'audit_log.json')
-        if not os.path.exists(log_file_path):
-            return []
+        from app import db
+        from models import AuditLog
         
-        logs = []
-        with open(log_file_path, 'r', encoding='utf-8') as log_file:
-            for line in log_file:
-                try:
-                    log_entry = json.loads(line.strip())
-                    logs.append(log_entry)
-                except json.JSONDecodeError:
-                    continue
+        logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
         
-        # Return most recent logs first
-        return logs[-limit:] if len(logs) > limit else logs[::-1]
+        # Convert to dictionary format for template compatibility
+        log_list = []
+        for log in logs:
+            log_dict = {
+                'timestamp': log.timestamp.isoformat(),
+                'event_type': log.event_type,
+                'user_id': log.user,
+                'ip_address': log.ip_address,
+                'action_description': log.description
+            }
+            log_list.append(log_dict)
+        
+        return log_list
     except Exception as e:
         print(f"Error reading audit logs: {str(e)}")
         return []

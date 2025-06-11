@@ -45,3 +45,11 @@ class Category(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.Text)
     order_num = db.Column(db.Integer, nullable=False)
+
+class AuditLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    event_type = db.Column(db.String(100), nullable=False)
+    user = db.Column(db.String(200))
+    ip_address = db.Column(db.String(100))
+    description = db.Column(db.Text, nullable=False)
