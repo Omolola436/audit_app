@@ -69,32 +69,94 @@ def generate_excel_report(user_id):
     
     return filepath
 
-def generate_category_chart(category_name, responses_data, save_path):
-    """Generate pie chart for a category"""
-    # Count responses
-    answer_counts = {}
-    for response in responses_data:
-        answer = response.answer or "No Answer"
-        answer_counts[answer] = answer_counts.get(answer, 0) + 1
+def calculate_privacy_rating(responses_data):
+    """Calculate privacy audit rating based on responses"""
+    # Map common answers to privacy ratings
+    rating_map = {
+        'yes': 'High',
+        'mostly': 'Reasonable', 
+        'partially': 'Limited',
+        'no': 'Very Limited',
+        'always': 'High',
+        'often': 'Reasonable',
+        'sometimes': 'Limited',
+        'never': 'Very Limited',
+        'excellent': 'High',
+        'good': 'Reasonable',
+        'fair': 'Limited',
+        'poor': 'Very Limited',
+        'comprehensive': 'High',
+        'adequate': 'Reasonable',
+        'basic': 'Limited',
+        'none': 'Very Limited'
+    }
     
-    if not answer_counts:
+    # Count ratings based on responses
+    rating_counts = {'High': 0, 'Reasonable': 0, 'Limited': 0, 'Very Limited': 0}
+    
+    for response in responses_data:
+        answer = (response.answer or "").lower().strip()
+        
+        # Map answer to privacy rating
+        mapped_rating = None
+        for key, rating in rating_map.items():
+            if key in answer:
+                mapped_rating = rating
+                break
+        
+        # If no direct mapping, analyze answer content
+        if not mapped_rating:
+            if any(word in answer for word in ['strong', 'complete', 'full', 'robust', 'comprehensive']):
+                mapped_rating = 'High'
+            elif any(word in answer for word in ['adequate', 'sufficient', 'generally', 'mostly']):
+                mapped_rating = 'Reasonable'
+            elif any(word in answer for word in ['partial', 'some', 'limited', 'basic']):
+                mapped_rating = 'Limited'
+            elif any(word in answer for word in ['no', 'none', 'lacking', 'poor', 'insufficient']):
+                mapped_rating = 'Very Limited'
+            else:
+                mapped_rating = 'Limited'  # Default for unclear responses
+        
+        rating_counts[mapped_rating] += 1
+    
+    return rating_counts
+
+def generate_category_chart(category_name, responses_data, save_path):
+    """Generate pie chart for privacy audit category using privacy ratings"""
+    # Calculate privacy ratings
+    rating_counts = calculate_privacy_rating(responses_data)
+    
+    # Remove zero counts
+    rating_counts = {k: v for k, v in rating_counts.items() if v > 0}
+    
+    if not rating_counts:
         return None
     
-    # Create pie chart
+    # Create pie chart with privacy audit colors
     plt.figure(figsize=(8, 6))
-    colors = ['#FF8C00', '#FFD700', '#F5DEB3', '#DEB887', '#D2691E']
     
-    wedges, texts, autotexts = plt.pie(answer_counts.values(), 
-                                       labels=answer_counts.keys(), 
-                                       autopct='%1.0f%%',
-                                       colors=colors[:len(answer_counts)],
+    # Privacy audit color scheme
+    colors = {
+        'High': '#28a745',           # Green - Strong controls
+        'Reasonable': '#ffc107',     # Yellow - Good controls with gaps
+        'Limited': '#fd7e14',        # Orange - Insufficient controls
+        'Very Limited': '#dc3545'    # Red - Major deficiencies
+    }
+    
+    chart_colors = [colors[rating] for rating in rating_counts.keys()]
+    
+    wedges, texts, autotexts = plt.pie(list(rating_counts.values()), 
+                                       labels=list(rating_counts.keys()), 
+                                       autopct='%1.1f%%',
+                                       colors=chart_colors,
                                        startangle=90)
     
-    plt.title(f'{category_name.upper()}', fontsize=14, fontweight='bold', pad=20)
+    plt.title(f'{category_name} - Privacy Control Assessment', fontsize=14, fontweight='bold', pad=20)
     
-    # Style the text
+    # Enhance text appearance
     for text in texts:
-        text.set_fontsize(10)
+        text.set_fontsize(11)
+        text.set_fontweight('bold')
     for autotext in autotexts:
         autotext.set_color('white')
         autotext.set_fontweight('bold')

@@ -136,4 +136,73 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Audit Log Section -->
+<div class="card shadow audit-card mt-4">
+    <div class="card-header text-white" style="background: linear-gradient(135deg, #6f42c1, #dc3545);">
+        <h4 class="mb-0">
+            <i class="fas fa-shield-alt me-2"></i>
+            Security Audit Log
+        </h4>
+    </div>
+    <div class="card-body p-0" style="background-color: #FFF8DC;">
+        {% if audit_logs %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #F5DEB3;">
+                    <tr>
+                        <th class="text-dark"><i class="fas fa-clock me-1"></i>Timestamp</th>
+                        <th class="text-dark"><i class="fas fa-tag me-1"></i>Event Type</th>
+                        <th class="text-dark"><i class="fas fa-user me-1"></i>User</th>
+                        <th class="text-dark"><i class="fas fa-globe me-1"></i>IP Address</th>
+                        <th class="text-dark"><i class="fas fa-info-circle me-1"></i>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td>
+                            <small class="text-muted">
+                                {{ log.timestamp[:19].replace('T', ' ') }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if log.event_type == 'login_success' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Login Success
+                                </span>
+                            {% elif log.event_type == 'login_failure' %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i>Login Failed
+                                </span>
+                            {% elif log.event_type == 'admin_access' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-user-shield me-1"></i>Admin Access
+                                </span>
+                            {% elif log.event_type == 'error' %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Error
+                                </span>
+                            {% else %}
+                                <span class="badge bg-info">{{ log.event_type.title() }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-dark">{{ log.user_id if log.user_id != 'anonymous' else 'Anonymous' }}</td>
+                        <td class="text-dark">{{ log.ip_address or 'Unknown' }}</td>
+                        <td class="text-dark">{{ log.action_description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No audit logs available</h5>
+            <p class="text-muted">System activity will be logged here for security monitoring.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}
