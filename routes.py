@@ -323,6 +323,53 @@ def download_file(submission_id, file_type):
     flash('File not found', 'error')
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/upload', methods=['POST'])
+def upload_pdf():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    if 'pdf_file' not in request.files or 'submission_id' not in request.form:
+        flash('Invalid upload request.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    file = request.files['pdf_file']
+    submission_id = request.form['submission_id']
+
+    if file.filename == '':
+        flash('No file selected.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    if file and file.filename.lower().endswith('.pdf'):
+        filename = secure_filename(f"{submission_id}_{file.filename}")
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        # Optional: Save PDF path to database if you have a column
+        submission = Submission.query.get(submission_id)
+        if submission:
+            submission.uploaded_admin_pdf_path = filepath  # Make sure this column exists
+            db.session.commit()
+
+        flash('PDF uploaded successfully.', 'success')
+    else:
+        flash('Only PDF files are allowed.', 'error')
+
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/download/admin-pdf/<int:submission_id>')
+def download_admin_pdf(submission_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    submission = Submission.query.get_or_404(submission_id)
+
+    if submission.uploaded_admin_pdf_path and os.path.exists(submission.uploaded_admin_pdf_path):
+        filename = os.path.basename(submission.uploaded_admin_pdf_path)
+        return send_file(submission.uploaded_admin_pdf_path, as_attachment=True, download_name=filename)
+
+    flash('Uploaded PDF not found.', 'error')
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/download/user-file/<int:response_id>')
 def download_user_file(response_id):
     if not session.get('admin_logged_in'):

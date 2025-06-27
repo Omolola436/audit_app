@@ -40,3 +40,5 @@ with app.app_context():
     import models
     db.create_all()
     logging.info("Database tables created")
+
+import routes

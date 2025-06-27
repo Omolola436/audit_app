@@ -94,6 +94,29 @@
                                     <i class="fas fa-file-word"></i>
                                 </a>
                                 {% endif %}
+                                <!-- Upload Admin PDF Button -->
+                                <form action="{{ url_for('upload_pdf') }}" method="post" enctype="multipart/form-data" style="display:inline-block;">
+                                    <input type="hidden" name="submission_id" value="{{ data.submission.id }}">
+                                    <label for="pdf_file_{{ data.submission.id }}" class="btn btn-sm btn-outline-secondary" title="Upload PDF">
+                                        <i class="fas fa-upload"></i>
+                                        <input type="file" name="pdf_file" id="pdf_file_{{ data.submission.id }}" accept="application/pdf"
+                                            onchange="this.form.submit()" style="display:none;">
+                                    </label>
+                                </form>
+
+                                <!-- Show download button if PDF already uploaded -->
+                                {% if data.submission.uploaded_admin_pdf_path %}
+                                <a href="{{ url_for('download_admin_pdf', submission_id=data.submission.id) }}" 
+                                class="btn btn-sm btn-outline-dark" title="Download Uploaded PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="table-light">
+                        <td colspan="5">
+                            <div class="ms-3">
                             </div>
                         </td>
                     </tr>

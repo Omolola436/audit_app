@@ -39,6 +39,7 @@ class Submission(db.Model):
     word_report_path = db.Column(db.String(500))
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(50), default='completed')
+    uploaded_admin_pdf_path = db.Column(db.String(500))  # Path to uploaded PDF
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
