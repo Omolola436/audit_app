@@ -5,6 +5,8 @@ from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, session, send_file, abort
 from werkzeug.utils import secure_filename
 from app import app, db
+from urllib.parse import unquote
+from urllib.parse import quote
 from models import User, Question, Response, Submission, Category
 from report_generator import generate_excel_report, generate_word_report
 from audit_logger import (log_login_success, log_login_failure, log_logout, log_admin_access, 
@@ -48,7 +50,7 @@ def login():
         # Get first category
         first_category = Category.query.order_by(Category.order_num).first()
         if first_category:
-            return redirect(url_for('category_intro', category_name=first_category.name))
+            return redirect(f"/category/{quote(first_category.name)}")
         else:
             flash('No questions available. Please contact administrator.', 'error')
             return redirect(url_for('index'))
@@ -60,7 +62,10 @@ def category_intro(category_name):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    category = Category.query.filter_by(name=category_name).first()
+    # Decode URL-encoded name
+    decoded_name = unquote(category_name)
+    category = Category.query.filter_by(name=decoded_name).first()
+    
     if not category:
         abort(404)
     
@@ -70,9 +75,9 @@ def category_intro(category_name):
 def start_category(category_name):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
-    # Get first question in this category
-    question = Question.query.filter_by(category=category_name).order_by(Question.order_num).first()
+
+    decoded_name = unquote(category_name)
+    question = Question.query.filter_by(category=decoded_name).order_by(Question.order_num).first()
     if question:
         return redirect(url_for('question', question_id=question.id))
     else:
