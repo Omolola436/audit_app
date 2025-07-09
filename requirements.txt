@@ -13,3 +13,4 @@ matplotlib==3.7.3
 requests==2.32.4
 python-dateutil==2.9.0.post0
 tzdata==2025.2
+docx
